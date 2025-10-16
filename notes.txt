@@ -1,0 +1,7 @@
+in the consumers we should check if the queue is empty with a while loop.
+if we do it with an if statement we could get null messages because if the
+queue was empty and two or more consumer threads were waiting for an message,
+one one retrieves this element, the other threads will get a null message
+because the queue was empty again.
+
+i get this error. after that, the thread who get the error seems to die.
