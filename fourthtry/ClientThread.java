@@ -43,7 +43,7 @@ public class ClientThread extends Thread {
         }
 
         synchronized (ClientThread.lock) {
-            Message message = new Message(currentId++, false, type);
+            Message message = new Message(currentId++, true, type);
             return message;
         }
     }

@@ -15,6 +15,7 @@ public class ServerThread extends Thread {
             Message message = outboxQueue.consume();
             if (message.getType() == Type.EndProgram) {
                 System.out.println("END PROGRAM RECEIVED");
+                break;
             }
         }
     }

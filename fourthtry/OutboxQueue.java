@@ -3,14 +3,18 @@ package fourthtry;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import fourthtry.Message.Type;
+
 public class OutboxQueue {
     private Queue<Message> queue = new LinkedList<>();
     private int maxSize;
     private OutboxSignal sharedSignal = new OutboxSignal();
+    private int serverNumber;
 
 
-    public OutboxQueue(int maxSize) {
+    public OutboxQueue(int maxSize, int serverNumber) {
         this.maxSize = maxSize;
+        this.serverNumber = serverNumber;
     }
 
     public void produce(Message message) {
@@ -18,17 +22,26 @@ public class OutboxQueue {
             Thread.yield();
         }
         queue.add(message);
-        System.out.println("Filter Produced: " + message + ":" + queue);
+        System.out.println("Filter/Manager Produced: " + message + ":" + queue);
+
+        if (message.getType() == Type.EndProgram) {
+            for (int i = 0; i < serverNumber-1; i++) {
+                queue.add(message);
+            }
+        }
+        
         sharedSignal.modIsEmpty(false);
     }
 
     public Message consume() {
-        while (sharedSignal.getIsEmpty()) {}
-        Message message = queue.remove();
-        if (queue.isEmpty()) {
-            sharedSignal.modIsEmpty(true);
+        synchronized (this) {
+            while (sharedSignal.getIsEmpty()) {}
+            Message message = queue.remove();
+            if (queue.isEmpty()) {
+                sharedSignal.modIsEmpty(true);
+            }
+            System.out.println("Server Consumed: " + message + ":" + queue);
+            return message;
         }
-        System.out.println("Server Consumed: " + message + ":" + queue);
-        return message;
     }
 }

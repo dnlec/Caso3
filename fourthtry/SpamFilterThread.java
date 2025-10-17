@@ -5,6 +5,7 @@ import fourthtry.Message.Type;
 public class SpamFilterThread extends Thread {
     private InboxQueue inboxQueue;
     private OutboxQueue outboxQueue;
+    private QuarantineQueue quarantine;
     
     private String name;
     
@@ -13,11 +14,14 @@ public class SpamFilterThread extends Thread {
     private static int numEnd;
 
     private static Object lock = new Object();
+    private static Object endLock = new Object();
+    private static boolean endMessageSent;
 
 
-    public SpamFilterThread(InboxQueue inboxQueue, OutboxQueue outboxQueue, String name) {
+    public SpamFilterThread(InboxQueue inboxQueue, OutboxQueue outboxQueue, QuarantineQueue quarantine, String name) {
         this.inboxQueue = inboxQueue;
         this.outboxQueue = outboxQueue;
+        this.quarantine = quarantine;
         this.name = name;
     }
 
@@ -32,8 +36,17 @@ public class SpamFilterThread extends Thread {
 
             }
         }
-        Message endMessage = new Message(-1, false, Type.EndProgram);
-        outboxQueue.produce(endMessage);
+        synchronized (endLock) {
+            if (!SpamFilterThread.endMessageSent) {
+                while (!quarantine.isEmpty()) {
+                    Thread.yield();
+                }
+                Message endMessage = new Message(-1, false, Type.EndProgram);
+                quarantine.produce(endMessage);
+                outboxQueue.produce(endMessage);
+                SpamFilterThread.endMessageSent = true;
+            }
+        }
         System.out.println("Filter finished");
     }
 
@@ -57,6 +70,7 @@ public class SpamFilterThread extends Thread {
             outboxQueue.produce(message);
         } else {
             // sent to quarantine
+            quarantine.produce(message);
         }
     
     }
