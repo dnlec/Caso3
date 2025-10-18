@@ -1,19 +1,17 @@
 package fourthtry;
 
-
-
 public class Message {
     enum Type {
-        StartClient,
-        EndClient,
-        Email,
-        EndProgram
+        START_CLIENT,
+        END_CLIENT,
+        EMAIL,
+        END_PROGRAM
     }
     private int id;
     private boolean flag;
     private Type type;
+    private int quarantineTime;
     
-
     public Message(int id, boolean flag, Type type) {
         this.id = id;
         this.flag = flag;
@@ -31,11 +29,17 @@ public class Message {
     public Type getType() {
         return this.type;
     }
+
+    public int getQuarantineTime() {
+        return this.quarantineTime;
+    }
+    
+    public void setQuarantineTime(int time) {
+        this.quarantineTime = time;
+    }
     
     @Override
     public String toString() {
         return String.valueOf(this.id);
     }
-
-    
 }

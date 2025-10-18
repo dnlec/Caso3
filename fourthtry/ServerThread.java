@@ -1,5 +1,7 @@
 package fourthtry;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import fourthtry.Message.Type;
 
 public class ServerThread extends Thread {
@@ -13,9 +15,16 @@ public class ServerThread extends Thread {
     public void run() {
         while (true) {
             Message message = outboxQueue.consume();
-            if (message.getType() == Type.EndProgram) {
+            if (message.getType() == Type.END_PROGRAM) {
                 System.out.println("END PROGRAM RECEIVED");
                 break;
+            }
+            // Simulate reading with random time
+            int processTime = ThreadLocalRandom.current().nextInt(100, 151);
+            try {
+                Thread.sleep(processTime);
+            } catch (InterruptedException e) {
+
             }
         }
     }

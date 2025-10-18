@@ -6,12 +6,9 @@ import java.util.Queue;
 public class QuarantineQueue {
     private Queue<Message> queue = new LinkedList<>();
 
-
     public void produce(Message message) {
-        synchronized (this) {
-            queue.add(message);
-            System.out.println("Filter Produced: " + message + ":" + queue);
-        }
+        queue.add(message);
+        System.out.println("Filter Produced: " + message + ":");
     }
 
     public Message consume() {
@@ -19,7 +16,7 @@ public class QuarantineQueue {
             Thread.yield();
         }
         Message message = queue.remove();
-        System.out.println("Manager Consumed: " + message + ":" + queue);
+        System.out.println("Manager Consumed: " + message + ":");
         return message;
     }
 

@@ -1,54 +1,46 @@
 package fourthtry;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import fourthtry.Message.Type;
 
 public class ClientThread extends Thread {
     private InboxQueue inboxQueue;
-    private String name;
-    private int emails;
+    private int id;
+    private int numEmails;
     
     private static int currentId = 0;
     private static Object lock = new Object();
 
-    public ClientThread(InboxQueue queue, String name, int emails) {
+    public ClientThread(InboxQueue queue, int id, int numEmails) {
         this.inboxQueue = queue;
-        this.name = name;
-        this.emails = emails;
+        this.id = id;
+        this.numEmails = numEmails;
     }
 
     @Override
     public void run() {
         int emailCounter = 0;
-        while (emailCounter < this.emails) {
-            try {
+        try {
+            inboxQueue.produce(new Message(-2, false, Type.START_CLIENT));
+            while (emailCounter < this.numEmails) {
                 Message message = generateMessage(emailCounter);
                 inboxQueue.produce(message);
                 Thread.sleep(100);
-            } catch (InterruptedException ex) {
-
+                emailCounter++;
             }
-            emailCounter++;
+            inboxQueue.produce(new Message(-2, false, Type.END_CLIENT));
+        } catch (Exception e) {
+
         }
         System.out.println("client finished");
     }
 
-    private synchronized Message generateMessage(int emailCount) {
-        Type type;
-        if (emailCount == 0) {
-            type = Type.StartClient;
-        } else if (emailCount == this.emails-1) {
-            type = Type.EndClient;
-        } else {
-            type = Type.Email;
-        }
-
+    private Message generateMessage(int emailCount) {
         synchronized (ClientThread.lock) {
-            Message message = new Message(currentId++, true, type);
+            Message message = new Message(currentId++, ThreadLocalRandom.current().nextBoolean(), Type.EMAIL);
             return message;
         }
     }
-
-    
-
     
 }

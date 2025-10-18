@@ -11,7 +11,6 @@ public class OutboxQueue {
     private OutboxSignal sharedSignal = new OutboxSignal();
     private int serverNumber;
 
-
     public OutboxQueue(int maxSize, int serverNumber) {
         this.maxSize = maxSize;
         this.serverNumber = serverNumber;
@@ -24,7 +23,8 @@ public class OutboxQueue {
         queue.add(message);
         System.out.println("Filter/Manager Produced: " + message + ":" + queue);
 
-        if (message.getType() == Type.EndProgram) {
+        // If END message, send copy to each server to end
+        if (message.getType() == Type.END_PROGRAM) {
             for (int i = 0; i < serverNumber-1; i++) {
                 queue.add(message);
             }

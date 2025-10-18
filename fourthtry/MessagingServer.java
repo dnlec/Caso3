@@ -1,46 +1,77 @@
 package fourthtry;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
 public class MessagingServer {
+        
     public static void main(String[] args) throws InterruptedException {
-        InboxQueue inboxQueue = new InboxQueue(10);
-        OutboxQueue outboxQueue = new OutboxQueue(10, 3);
+        int numClients = 2;
+        int numEmails = 20;
+        int numFilters = 2;
+        int numServers = 3;
+        int inboxCapacity = 10;
+        int outboxCapacity = 10;
+
+        File file = new File("parameters.txt");
+        try (Scanner sc = new Scanner(file)) {
+            int lineCounter = 0;
+            while(sc.hasNextLine()) {
+                String data = sc.nextLine();
+                if (lineCounter == 0) {
+                    numClients = Integer.parseInt(data);
+                } else if (lineCounter == 1) {
+                    numEmails = Integer.parseInt(data);
+                } else if (lineCounter == 2) {
+                    numFilters = Integer.parseInt(data);
+                } else if (lineCounter == 3) {
+                    numServers = Integer.parseInt(data);
+                } else if (lineCounter == 4) {
+                    inboxCapacity = Integer.parseInt(data);
+                } else {
+                    outboxCapacity = Integer.parseInt(data);
+                }
+                lineCounter++;
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println("parameters.txt not found. Exiting.");
+            System.exit(1);
+        }
+
+        InboxQueue inboxQueue = new InboxQueue(inboxCapacity);
+        OutboxQueue outboxQueue = new OutboxQueue(outboxCapacity, numServers);
         QuarantineQueue quarantineQueue = new QuarantineQueue();
 
-        ClientThread client1 = new ClientThread(inboxQueue, "1", 10);
-        ClientThread client2 = new ClientThread(inboxQueue, "2", 10);
-        SpamFilterThread consumer1 = new SpamFilterThread(inboxQueue, outboxQueue, quarantineQueue, "1");
-        SpamFilterThread consumer2 = new SpamFilterThread(inboxQueue, outboxQueue, quarantineQueue, "2");
-        ServerThread server1 = new ServerThread(outboxQueue);
-        ServerThread server2 = new ServerThread(outboxQueue);
-        ServerThread server3 = new ServerThread(outboxQueue);
+        ClientThread[] clients = new ClientThread[numClients];
+        SpamFilterThread[] filters = new SpamFilterThread[numFilters];
+        ServerThread[] servers = new ServerThread[numServers];
         QuarantineManagerThread manager = new QuarantineManagerThread(quarantineQueue, outboxQueue);
-        // SpamFilterThread consumer3 = new SpamFilterThread(inboxQueue, outboxQueue, "3");
-        // SpamFilterThread consumer4 = new SpamFilterThread(inboxQueue, "4");
-        // SpamFilterThread consumer5 = new SpamFilterThread(inboxQueue, "5");
 
-        client1.start();
-        client2.start();
-        consumer1.start();
-        consumer2.start();
-        server1.start();
-        server2.start();
-        server3.start();
+        for (int i = 0; i < numClients; i++) {
+            ClientThread client = new ClientThread(inboxQueue, i, numEmails);
+            clients[i] = client;
+            clients[i].start();
+        }
+        for (int i = 0; i < numFilters; i++) {
+            SpamFilterThread filter = new SpamFilterThread(inboxQueue, outboxQueue, quarantineQueue, i);
+            filters[i] = filter;
+            filters[i].start();
+        }
+        for (int i = 0; i < numServers; i++) {
+            ServerThread server = new ServerThread(outboxQueue);
+            servers[i] = server;
+            servers[i].start();
+        }
         manager.start();
-        // consumer3.start();
-        // consumer4.start();
-        // consumer5.start();
 
-        client1.join();
-        client2.join();
-        consumer1.join();
-        consumer2.join();
-        server1.join();
-        server2.join();
-        server3.join();
+        for (int i = 0; i < numClients; i++)
+            clients[i].join();
+        for (int i = 0; i < numFilters; i++)
+            filters[i].join();
+        for (int i = 0; i < numServers; i++)
+            servers[i].join();
         manager.join();
-
-        // concurrent modification exception is killing spam filters
-
 
         System.out.println("Messages sent");
     }

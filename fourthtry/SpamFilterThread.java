@@ -1,5 +1,7 @@
 package fourthtry;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import fourthtry.Message.Type;
 
 public class SpamFilterThread extends Thread {
@@ -7,7 +9,7 @@ public class SpamFilterThread extends Thread {
     private OutboxQueue outboxQueue;
     private QuarantineQueue quarantine;
     
-    private String name;
+    private int id;
     
     private static boolean running = true;
     private static int numStart;
@@ -18,11 +20,11 @@ public class SpamFilterThread extends Thread {
     private static boolean endMessageSent;
 
 
-    public SpamFilterThread(InboxQueue inboxQueue, OutboxQueue outboxQueue, QuarantineQueue quarantine, String name) {
+    public SpamFilterThread(InboxQueue inboxQueue, OutboxQueue outboxQueue, QuarantineQueue quarantine, int id) {
         this.inboxQueue = inboxQueue;
         this.outboxQueue = outboxQueue;
         this.quarantine = quarantine;
-        this.name = name;
+        this.id = id;
     }
 
     @Override
@@ -41,7 +43,7 @@ public class SpamFilterThread extends Thread {
                 while (!quarantine.isEmpty()) {
                     Thread.yield();
                 }
-                Message endMessage = new Message(-1, false, Type.EndProgram);
+                Message endMessage = new Message(-1, false, Type.END_PROGRAM);
                 quarantine.produce(endMessage);
                 outboxQueue.produce(endMessage);
                 SpamFilterThread.endMessageSent = true;
@@ -53,9 +55,9 @@ public class SpamFilterThread extends Thread {
     private void useMessage(Message message) {
         // protect shared variables
         synchronized (lock) {
-            if (message.getType() == Type.StartClient) {
+            if (message.getType() == Type.START_CLIENT) {
                 numStart++;
-            } else if (message.getType() == Type.EndClient) {
+            } else if (message.getType() == Type.END_CLIENT) {
                 numEnd++;
             }
 
@@ -64,12 +66,12 @@ public class SpamFilterThread extends Thread {
             }
         }
         
-        
-
+    
         if (!message.getFlag()) {
             outboxQueue.produce(message);
         } else {
-            // sent to quarantine
+            int randomTime = ThreadLocalRandom.current().nextInt(10000, 20001);
+            message.setQuarantineTime(randomTime);
             quarantine.produce(message);
         }
     
