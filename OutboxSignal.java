@@ -1,4 +1,4 @@
-package fourthtry;
+
 
 public class OutboxSignal {
     private boolean isEmpty = true;

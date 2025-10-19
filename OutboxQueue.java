@@ -1,9 +1,5 @@
-package fourthtry;
-
 import java.util.LinkedList;
 import java.util.Queue;
-
-import fourthtry.Message.Type;
 
 public class OutboxQueue {
     private Queue<Message> queue = new LinkedList<>();

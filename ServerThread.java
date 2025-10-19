@@ -1,8 +1,4 @@
-package fourthtry;
-
 import java.util.concurrent.ThreadLocalRandom;
-
-import fourthtry.Message.Type;
 
 public class ServerThread extends Thread {
     private OutboxQueue outboxQueue;

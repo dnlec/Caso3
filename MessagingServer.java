@@ -1,15 +1,78 @@
+
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
 public class MessagingServer {
-    public static void main(String[] args) {
-        InboxQueue inboxQueue = new InboxQueue(10);
+        
+    public static void main(String[] args) throws InterruptedException {
+        int numClients = 2;
+        int numEmails = 20;
+        int numFilters = 2;
+        int numServers = 3;
+        int inboxCapacity = 10;
+        int outboxCapacity = 10;
 
-        ClientThread client1 = new ClientThread(inboxQueue, "1");
-        ClientThread client2 = new ClientThread(inboxQueue, "2");
-        SpamFilterThread consumer1 = new SpamFilterThread(inboxQueue, "1");
-        SpamFilterThread consumer2 = new SpamFilterThread(inboxQueue, "2");
+        File file = new File("parameters.txt");
+        try (Scanner sc = new Scanner(file)) {
+            int lineCounter = 0;
+            while(sc.hasNextLine()) {
+                String data = sc.nextLine();
+                if (lineCounter == 0) {
+                    numClients = Integer.parseInt(data);
+                } else if (lineCounter == 1) {
+                    numEmails = Integer.parseInt(data);
+                } else if (lineCounter == 2) {
+                    numFilters = Integer.parseInt(data);
+                } else if (lineCounter == 3) {
+                    numServers = Integer.parseInt(data);
+                } else if (lineCounter == 4) {
+                    inboxCapacity = Integer.parseInt(data);
+                } else {
+                    outboxCapacity = Integer.parseInt(data);
+                }
+                lineCounter++;
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println("parameters.txt not found. Exiting.");
+            System.exit(1);
+        }
 
-        client1.start();
-        client2.start();
-        consumer1.start();
-        consumer2.start();
+        InboxQueue inboxQueue = new InboxQueue(inboxCapacity);
+        OutboxQueue outboxQueue = new OutboxQueue(outboxCapacity, numServers);
+        QuarantineQueue quarantineQueue = new QuarantineQueue();
+
+        ClientThread[] clients = new ClientThread[numClients];
+        SpamFilterThread[] filters = new SpamFilterThread[numFilters];
+        ServerThread[] servers = new ServerThread[numServers];
+        QuarantineManagerThread manager = new QuarantineManagerThread(quarantineQueue, outboxQueue);
+
+        for (int i = 0; i < numClients; i++) {
+            ClientThread client = new ClientThread(inboxQueue, i, numEmails);
+            clients[i] = client;
+            clients[i].start();
+        }
+        for (int i = 0; i < numFilters; i++) {
+            SpamFilterThread filter = new SpamFilterThread(inboxQueue, outboxQueue, quarantineQueue, i);
+            filters[i] = filter;
+            filters[i].start();
+        }
+        for (int i = 0; i < numServers; i++) {
+            ServerThread server = new ServerThread(outboxQueue);
+            servers[i] = server;
+            servers[i].start();
+        }
+        manager.start();
+
+        for (int i = 0; i < numClients; i++)
+            clients[i].join();
+        for (int i = 0; i < numFilters; i++)
+            filters[i].join();
+        for (int i = 0; i < numServers; i++)
+            servers[i].join();
+        manager.join();
+
+        System.out.println("Messages sent");
     }
 }

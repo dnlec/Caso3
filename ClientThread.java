@@ -1,60 +1,42 @@
+import java.util.concurrent.ThreadLocalRandom;
+
 public class ClientThread extends Thread {
     private InboxQueue inboxQueue;
-    private boolean running;
-    private String name;
+    private int id;
+    private int numEmails;
     
     private static int currentId = 0;
+    private static Object lock = new Object();
 
-    public ClientThread(InboxQueue queue, String name) {
+    public ClientThread(InboxQueue queue, int id, int numEmails) {
         this.inboxQueue = queue;
-        this.name = name;
+        this.id = id;
+        this.numEmails = numEmails;
     }
 
     @Override
     public void run() {
-        running = true;
-        produce();
-    }
-
-    public void produce() {
-
-
-        while (running) {
-            if(inboxQueue.isFull()) {
-                try {
-                    inboxQueue.waitIsNotFull();
-                } catch (InterruptedException e) {
-                    System.out.println("Error while waiting to Produce messages");
-                    break;
-                }
-            }
-            if (!running) {
-                break;
-            }
-            inboxQueue.add(generateMessage());
-            System.out.println("Queue size: " + this.inboxQueue.getSize());
-            try {
+        int emailCounter = 0;
+        try {
+            inboxQueue.produce(new Message(-2, false, Type.START_CLIENT));
+            while (emailCounter < this.numEmails) {
+                Message message = generateMessage(emailCounter);
+                inboxQueue.produce(message);
                 Thread.sleep(100);
-            } catch (InterruptedException e) {
-                
+                emailCounter++;
             }
-            
+            inboxQueue.produce(new Message(-2, false, Type.END_CLIENT));
+        } catch (Exception e) {
+
         }
-        System.out.println("Producer Stopped");
+        System.out.println("client finished");
     }
 
-    public void stoProducing() {
-        running = false;
-        inboxQueue.notifyIsNotFull();
+    private Message generateMessage(int emailCount) {
+        synchronized (ClientThread.lock) {
+            Message message = new Message(currentId++, ThreadLocalRandom.current().nextBoolean(), Type.EMAIL);
+            return message;
+        }
     }
-
-    private Message generateMessage() {
-        Message message = new Message(currentId++, false);
-        System.out.println("Client " + this.name + " produced message " + message.getId());
-        return message;
-    }
-
-    
-
     
 }
