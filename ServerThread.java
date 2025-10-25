@@ -1,17 +1,17 @@
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ServerThread extends Thread {
-    private OutboxQueue outboxQueue;
+    private DeliveryQueue deliveryQueue;
 
-    public ServerThread(String name, OutboxQueue outboxQueue) {
+    public ServerThread(String name, DeliveryQueue deliveryQueue) {
         super(name);
-        this.outboxQueue = outboxQueue;
+        this.deliveryQueue = deliveryQueue;
     }
 
     @Override
     public void run() {
         while (true) {
-            Message message = outboxQueue.consume(this);
+            Message message = deliveryQueue.consume(this);
             if (message.getType() == Type.END_PROGRAM) {
                 break;
             }

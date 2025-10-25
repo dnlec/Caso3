@@ -1,13 +1,13 @@
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class OutboxQueue {
+public class DeliveryQueue {
     private Queue<Message> queue = new LinkedList<>();
     private int maxSize;
-    private OutboxSignal sharedSignal = new OutboxSignal();
+    private DeliverySignal sharedSignal = new DeliverySignal();
     private int numServers;
 
-    public OutboxQueue(int maxSize, int serverNumber) {
+    public DeliveryQueue(int maxSize, int serverNumber) {
         this.maxSize = maxSize;
         this.numServers = serverNumber;
     }

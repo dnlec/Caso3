@@ -1,12 +1,12 @@
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ClientThread extends Thread {
-    private InboxQueue inboxQueue;
+    private IncomingQueue incomingQueue;
     private int numEmails;
     
-    public ClientThread(String name, InboxQueue queue, int numEmails) {
+    public ClientThread(String name, IncomingQueue incomingQueue, int numEmails) {
         super(name);
-        this.inboxQueue = queue;
+        this.incomingQueue = incomingQueue;
         this.numEmails = numEmails;
     }
 
@@ -14,14 +14,14 @@ public class ClientThread extends Thread {
     public void run() {
         int emailCounter = 0;
         try {
-            inboxQueue.produce(new Message(getName() + "-START", false, Type.START_CLIENT), this);
+            incomingQueue.produce(new Message(getName() + "-START", false, Type.START_CLIENT), this);
             while (emailCounter < this.numEmails) {
                 Message message = generateMessage(emailCounter);
-                inboxQueue.produce(message, this);
+                incomingQueue.produce(message, this);
                 Thread.sleep(100);
                 emailCounter++;
             }
-            inboxQueue.produce(new Message(getName() + "-END", false, Type.END_CLIENT), this);
+            incomingQueue.produce(new Message(getName() + "-END", false, Type.END_CLIENT), this);
         } catch (Exception e) {
 
         }

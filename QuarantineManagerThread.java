@@ -2,12 +2,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class QuarantineManagerThread extends Thread {
     private QuarantineQueue quarantineQueue;
-    private OutboxQueue outboxQueue;
+    private DeliveryQueue deliveryQueue;
 
-    public QuarantineManagerThread(String name, QuarantineQueue quarantineQueue, OutboxQueue outboxQueue) {
+    public QuarantineManagerThread(String name, QuarantineQueue quarantineQueue, DeliveryQueue deliveryQueue) {
         super(name);
         this.quarantineQueue = quarantineQueue;
-        this.outboxQueue = outboxQueue;
+        this.deliveryQueue = deliveryQueue;
     }
     
 
@@ -27,7 +27,7 @@ public class QuarantineManagerThread extends Thread {
             for (int i = message.getQuarantineTime(); i >= 0; i--) {
                 message.setQuarantineTime(i);
             }
-            outboxQueue.produce(message, this);
+            deliveryQueue.produce(message, this);
         }
         System.out.println(getName() + " FINISHED");
     }

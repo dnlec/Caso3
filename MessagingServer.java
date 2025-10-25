@@ -9,8 +9,8 @@ public class MessagingServer {
         int numEmails = 20;
         int numFilters = 2;
         int numServers = 3;
-        int inboxCapacity = 10;
-        int outboxCapacity = 10;
+        int incomingCapacity = 10;
+        int deliveryCapacity = 10;
 
         File file = new File("resources/parameters.txt");
         try (Scanner sc = new Scanner(file)) {
@@ -26,9 +26,9 @@ public class MessagingServer {
                 } else if (lineCounter == 3) {
                     numServers = Integer.parseInt(data);
                 } else if (lineCounter == 4) {
-                    inboxCapacity = Integer.parseInt(data);
+                    incomingCapacity = Integer.parseInt(data);
                 } else {
-                    outboxCapacity = Integer.parseInt(data);
+                    deliveryCapacity = Integer.parseInt(data);
                 }
                 lineCounter++;
             }
@@ -37,27 +37,27 @@ public class MessagingServer {
             System.exit(1);
         }
 
-        InboxQueue inboxQueue = new InboxQueue(inboxCapacity);
-        OutboxQueue outboxQueue = new OutboxQueue(outboxCapacity, numServers);
+        IncomingQueue incomingQueue = new IncomingQueue(incomingCapacity);
+        DeliveryQueue deliveryQueue = new DeliveryQueue(deliveryCapacity, numServers);
         QuarantineQueue quarantineQueue = new QuarantineQueue();
 
         ClientThread[] clients = new ClientThread[numClients];
         SpamFilterThread[] filters = new SpamFilterThread[numFilters];
         ServerThread[] servers = new ServerThread[numServers];
-        QuarantineManagerThread manager = new QuarantineManagerThread("Manager", quarantineQueue, outboxQueue);
+        QuarantineManagerThread manager = new QuarantineManagerThread("Manager", quarantineQueue, deliveryQueue);
 
         for (int i = 0; i < numClients; i++) {
-            ClientThread client = new ClientThread("Client-" + i, inboxQueue, numEmails);
+            ClientThread client = new ClientThread("Client-" + i, incomingQueue, numEmails);
             clients[i] = client;
             clients[i].start();
         }
         for (int i = 0; i < numFilters; i++) {
-            SpamFilterThread filter = new SpamFilterThread("Filter-" + i, inboxQueue, outboxQueue, quarantineQueue);
+            SpamFilterThread filter = new SpamFilterThread("Filter-" + i, incomingQueue, deliveryQueue, quarantineQueue);
             filters[i] = filter;
             filters[i].start();
         }
         for (int i = 0; i < numServers; i++) {
-            ServerThread server = new ServerThread("Server-" + i, outboxQueue);
+            ServerThread server = new ServerThread("Server-" + i, deliveryQueue);
             servers[i] = server;
             servers[i].start();
         }

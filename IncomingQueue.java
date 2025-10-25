@@ -1,12 +1,12 @@
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class InboxQueue {
+public class IncomingQueue {
     private Queue<Message> queue = new LinkedList<>();
     private int maxSize;
 
 
-    public InboxQueue(int maxSize) {
+    public IncomingQueue(int maxSize) {
         this.maxSize = maxSize;
     }
 

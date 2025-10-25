@@ -1,4 +1,4 @@
-public class OutboxSignal {
+public class DeliverySignal {
     private boolean isEmpty = true;
 
     public synchronized boolean getIsEmpty() {
