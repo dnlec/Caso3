@@ -6,17 +6,17 @@ import java.util.Queue;
 public class QuarantineQueue {
     private Queue<Message> queue = new LinkedList<>();
 
-    public void produce(Message message) {
+    public void produce(Message message, Thread thread) {
         queue.add(message);
-        System.out.println("Filter Produced: " + message + ":");
+        System.out.println("[" + thread.getName() + "]: Produced:" + message + ":");
     }
 
-    public Message consume() {
+    public Message consume(Thread thread) {
         while(queue.isEmpty()) {
             Thread.yield();
         }
         Message message = queue.remove();
-        System.out.println("Manager Consumed: " + message + ":");
+        System.out.println("["+ thread.getName() + "]: Consumed: " + message + ":");
         return message;
     }
 

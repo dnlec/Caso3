@@ -4,7 +4,8 @@ public class QuarantineManagerThread extends Thread {
     private QuarantineQueue quarantineQueue;
     private OutboxQueue outboxQueue;
 
-    public QuarantineManagerThread(QuarantineQueue quarantineQueue, OutboxQueue outboxQueue) {
+    public QuarantineManagerThread(String name, QuarantineQueue quarantineQueue, OutboxQueue outboxQueue) {
+        super(name);
         this.quarantineQueue = quarantineQueue;
         this.outboxQueue = outboxQueue;
     }
@@ -13,7 +14,7 @@ public class QuarantineManagerThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            Message message = quarantineQueue.consume();
+            Message message = quarantineQueue.consume(this);
             if (message.getType() == Type.END_PROGRAM) {
                 break;
             }
@@ -26,8 +27,8 @@ public class QuarantineManagerThread extends Thread {
             for (int i = message.getQuarantineTime(); i >= 0; i--) {
                 message.setQuarantineTime(i);
             }
-            outboxQueue.produce(message);
+            outboxQueue.produce(message, this);
         }
-        System.out.println("Manager finished");
+        System.out.println(getName() + " finished");
     }
 }

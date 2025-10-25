@@ -1,5 +1,3 @@
-
-
 public class OutboxSignal {
     private boolean isEmpty = true;
 

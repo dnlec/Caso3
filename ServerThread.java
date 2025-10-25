@@ -3,16 +3,16 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ServerThread extends Thread {
     private OutboxQueue outboxQueue;
 
-    public ServerThread(OutboxQueue outboxQueue) {
+    public ServerThread(String name, OutboxQueue outboxQueue) {
+        super(name);
         this.outboxQueue = outboxQueue;
     }
 
     @Override
     public void run() {
         while (true) {
-            Message message = outboxQueue.consume();
+            Message message = outboxQueue.consume(this);
             if (message.getType() == Type.END_PROGRAM) {
-                System.out.println("END PROGRAM RECEIVED");
                 break;
             }
             // Simulate reading with random time
@@ -23,5 +23,6 @@ public class ServerThread extends Thread {
 
             }
         }
+        System.out.println(getName() + " finished");
     }
 }

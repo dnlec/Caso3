@@ -5,23 +5,23 @@ public class OutboxQueue {
     private Queue<Message> queue = new LinkedList<>();
     private int maxSize;
     private OutboxSignal sharedSignal = new OutboxSignal();
-    private int serverNumber;
+    private int numServers;
 
     public OutboxQueue(int maxSize, int serverNumber) {
         this.maxSize = maxSize;
-        this.serverNumber = serverNumber;
+        this.numServers = serverNumber;
     }
 
-    public void produce(Message message) {
+    public void produce(Message message, Thread thread) {
         while (maxSize == queue.size()) {
             Thread.yield();
         }
         queue.add(message);
-        System.out.println("Filter/Manager Produced: " + message + ":" + queue);
+        System.out.println("[" + thread.getName() + "]: Produced: " + message + ":" + queue);
 
-        // If END message, send copy to each server to end
+        // If END message, send copy to each server thread to end
         if (message.getType() == Type.END_PROGRAM) {
-            for (int i = 0; i < serverNumber-1; i++) {
+            for (int i = 0; i < numServers-1; i++) {
                 queue.add(message);
             }
         }
@@ -29,14 +29,14 @@ public class OutboxQueue {
         sharedSignal.modIsEmpty(false);
     }
 
-    public Message consume() {
+    public Message consume(Thread thread) {
         synchronized (this) {
             while (sharedSignal.getIsEmpty()) {}
             Message message = queue.remove();
             if (queue.isEmpty()) {
                 sharedSignal.modIsEmpty(true);
             }
-            System.out.println("Server Consumed: " + message + ":" + queue);
+            System.out.println("[" + thread.getName() + "]: Consumed: " + message + ":" + queue);
             return message;
         }
     }

@@ -1,5 +1,3 @@
-
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -14,7 +12,7 @@ public class MessagingServer {
         int inboxCapacity = 10;
         int outboxCapacity = 10;
 
-        File file = new File("parameters.txt");
+        File file = new File("resources/parameters.txt");
         try (Scanner sc = new Scanner(file)) {
             int lineCounter = 0;
             while(sc.hasNextLine()) {
@@ -46,20 +44,20 @@ public class MessagingServer {
         ClientThread[] clients = new ClientThread[numClients];
         SpamFilterThread[] filters = new SpamFilterThread[numFilters];
         ServerThread[] servers = new ServerThread[numServers];
-        QuarantineManagerThread manager = new QuarantineManagerThread(quarantineQueue, outboxQueue);
+        QuarantineManagerThread manager = new QuarantineManagerThread("Manager", quarantineQueue, outboxQueue);
 
         for (int i = 0; i < numClients; i++) {
-            ClientThread client = new ClientThread(inboxQueue, i, numEmails);
+            ClientThread client = new ClientThread("Client " + i, inboxQueue, numEmails);
             clients[i] = client;
             clients[i].start();
         }
         for (int i = 0; i < numFilters; i++) {
-            SpamFilterThread filter = new SpamFilterThread(inboxQueue, outboxQueue, quarantineQueue, i);
+            SpamFilterThread filter = new SpamFilterThread("Filter " + i, inboxQueue, outboxQueue, quarantineQueue);
             filters[i] = filter;
             filters[i].start();
         }
         for (int i = 0; i < numServers; i++) {
-            ServerThread server = new ServerThread(outboxQueue);
+            ServerThread server = new ServerThread("Server " + i, outboxQueue);
             servers[i] = server;
             servers[i].start();
         }

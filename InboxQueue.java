@@ -1,5 +1,3 @@
-
-
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -12,25 +10,25 @@ public class InboxQueue {
         this.maxSize = maxSize;
     }
 
-    public void produce(Message message) throws InterruptedException {
+    public void produce(Message message, Thread thread) throws InterruptedException {
         synchronized (this) {
             while (maxSize == queue.size()) {
                 wait();
             }
             queue.add(message);
-            System.out.println("Produced: " + message.getId() + ":" + queue);
+            System.out.println("[" + thread.getName() + "]: Produced: " + message.getId() + ":" + queue);
             notifyAll();
         }
     }
 
-    public Message consume() throws InterruptedException {
+    public Message consume(Thread thread) throws InterruptedException {
         Message message;
         synchronized (this) {
             while (queue.isEmpty()) {
                 wait();
             }
             message = queue.remove();
-            System.out.println("Consumed: " + message.getId() + ":" + queue);
+            System.out.println("[" + thread.getName() + "]: Consumed: " + message.getId() + ":" + queue);
             notifyAll();
         }
         return message;
