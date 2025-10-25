@@ -23,6 +23,6 @@ public class ServerThread extends Thread {
 
             }
         }
-        System.out.println(getName() + " finished");
+        System.out.println(getName() + " FINISHED");
     }
 }

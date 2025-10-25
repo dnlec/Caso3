@@ -38,13 +38,13 @@ public class SpamFilterThread extends Thread {
                 while (!quarantineQueue.isEmpty()) {
                     Thread.yield();
                 }
-                Message endMessage = new Message(-1, false, Type.END_PROGRAM);
+                Message endMessage = new Message("END", false, Type.END_PROGRAM);
                 quarantineQueue.produce(endMessage, this);
                 outboxQueue.produce(endMessage, this);
                 SpamFilterThread.endMessageSent = true;
             }
         }
-        System.out.println(getName() + " finished");
+        System.out.println(getName() + " FINISHED");
     }
 
     private void useMessage(Message message) {

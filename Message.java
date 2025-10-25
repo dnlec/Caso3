@@ -7,18 +7,18 @@ enum Type {
 
 public class Message {
     
-    private int id;
+    private String id;
     private boolean flag;
     private Type type;
     private int quarantineTime;
     
-    public Message(int id, boolean flag, Type type) {
+    public Message(String id, boolean flag, Type type) {
         this.id = id;
         this.flag = flag;
         this.type = type;
     }
 
-    public int getId() {
+    public String getId() {
         return this.id;
     }
 

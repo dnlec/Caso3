@@ -47,17 +47,17 @@ public class MessagingServer {
         QuarantineManagerThread manager = new QuarantineManagerThread("Manager", quarantineQueue, outboxQueue);
 
         for (int i = 0; i < numClients; i++) {
-            ClientThread client = new ClientThread("Client " + i, inboxQueue, numEmails);
+            ClientThread client = new ClientThread("Client-" + i, inboxQueue, numEmails);
             clients[i] = client;
             clients[i].start();
         }
         for (int i = 0; i < numFilters; i++) {
-            SpamFilterThread filter = new SpamFilterThread("Filter " + i, inboxQueue, outboxQueue, quarantineQueue);
+            SpamFilterThread filter = new SpamFilterThread("Filter-" + i, inboxQueue, outboxQueue, quarantineQueue);
             filters[i] = filter;
             filters[i].start();
         }
         for (int i = 0; i < numServers; i++) {
-            ServerThread server = new ServerThread("Server " + i, outboxQueue);
+            ServerThread server = new ServerThread("Server-" + i, outboxQueue);
             servers[i] = server;
             servers[i].start();
         }

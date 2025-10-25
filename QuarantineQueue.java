@@ -8,7 +8,7 @@ public class QuarantineQueue {
 
     public void produce(Message message, Thread thread) {
         queue.add(message);
-        System.out.println("[" + thread.getName() + "]: Produced:" + message + ":");
+        System.out.println("[" + thread.getName() + "]: Produced: " + message + ":");
     }
 
     public Message consume(Thread thread) {
