@@ -17,7 +17,7 @@ public class IncomingQueue {
             }
             queue.add(message);
             System.out.println("[" + thread.getName() + "]: Produced: " + message.getId() + ":" + queue);
-            notifyAll();
+            notify();
         }
     }
 
@@ -29,12 +29,12 @@ public class IncomingQueue {
             }
             message = queue.remove();
             System.out.println("[" + thread.getName() + "]: Consumed: " + message.getId() + ":" + queue);
-            notifyAll();
+            notify();
         }
         return message;
     }
 
-    public int getSize() {
+    public synchronized int getSize() {
         return this.queue.size();
     }
 

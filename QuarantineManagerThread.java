@@ -1,3 +1,4 @@
+import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class QuarantineManagerThread extends Thread {
@@ -13,21 +14,36 @@ public class QuarantineManagerThread extends Thread {
 
     @Override
     public void run() {
-        while (true) {
-            Message message = quarantineQueue.consume(this);
-            if (message.getType() == Type.END_PROGRAM) {
-                break;
+        boolean running = true;
+        while (running) {
+            try {
+                Thread.sleep(1000); 
+                synchronized (quarantineQueue) {
+                    Iterator<Message> it = quarantineQueue.getQueue().iterator();
+
+                    while (it.hasNext()) {
+                        Message message = it.next();
+                        if (message.getType() == Type.END_PROGRAM) {
+                            running = false;
+                            it.remove(); 
+                            break;
+                        }
+                        message.setQuarantineTime(message.getQuarantineTime() - 1);
+
+                        if (message.getQuarantineTime() <= 0) {
+                            it.remove();                             
+                            int randomNumber = ThreadLocalRandom.current().nextInt(1, 22);
+                            if (randomNumber % 7 == 0) {
+                                System.out.println("["+ getName() + "]: Discarded: " + message);
+                            } else {
+                                deliveryQueue.produce(message, this);
+                            }
+                        }
+                    }
+                }
+            } catch (InterruptedException e) {
+                running = false;
             }
-            // If multiple of 7, discard message
-            int randomNumber = ThreadLocalRandom.current().nextInt(1, 22);
-            if (randomNumber % 7 == 0) {
-                continue;
-            }
-            // Process message
-            for (int i = message.getQuarantineTime(); i >= 0; i--) {
-                message.setQuarantineTime(i);
-            }
-            deliveryQueue.produce(message, this);
         }
         System.out.println(getName() + " FINISHED");
     }

@@ -1,4 +1,4 @@
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 public class SpamFilterThread extends Thread {
     private IncomingQueue incomingQueue;
@@ -22,20 +22,39 @@ public class SpamFilterThread extends Thread {
 
     @Override
     public void run() {
-        while (running) {
-            try {
-                Message message = incomingQueue.consume(this);
-                useMessage(message);
-                Thread.sleep(150);
-            } catch (InterruptedException ex) {
-
+        while (true) {
+            Message message;
+            
+            synchronized (lock) {
+                if (!running && incomingQueue.getSize() == 0) {
+                    break; 
+                }
             }
+
+            try {
+                message = incomingQueue.consume(this);
+            
+                useMessage(message);                 
+                if (message.getType() == Type.EMAIL) {
+                    if (!message.getFlag()) {
+                        deliveryQueue.produce(message, this);
+                    } else {
+                        int randomTime = new Random().nextInt(10, 21);
+                        message.setQuarantineTime(randomTime);
+                        quarantineQueue.produce(message, this);
+                    }
+                }
+                
+                Thread.sleep(150);
+            } catch (InterruptedException ex) {}
         }
+        
         synchronized (endLock) {
             if (!SpamFilterThread.endMessageSent) {
                 // Ensure quarantine queue to be empty before sending END message
                 while (!quarantineQueue.isEmpty())
                     Thread.yield();
+                    
                 Message endMessage = new Message("END", false, Type.END_PROGRAM);
                 quarantineQueue.produce(endMessage, this);
                 deliveryQueue.produce(endMessage, this);
@@ -58,17 +77,5 @@ public class SpamFilterThread extends Thread {
                 running = false;
             }
         }
-    
-        if (!message.getFlag()) {
-            deliveryQueue.produce(message, this);
-        } else {
-            int randomTime = ThreadLocalRandom.current().nextInt(10000, 20001);
-            message.setQuarantineTime(randomTime);
-            quarantineQueue.produce(message, this);
-        }
-    
     }
-
-
-    
 }

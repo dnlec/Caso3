@@ -1,12 +1,10 @@
-
-
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class QuarantineQueue {
     private Queue<Message> queue = new LinkedList<>();
 
-    public void produce(Message message, Thread thread) {
+    public synchronized void produce(Message message, Thread thread) {
         queue.add(message);
         System.out.println("[" + thread.getName() + "]: Produced: " + message + ":");
     }
@@ -20,7 +18,11 @@ public class QuarantineQueue {
         return message;
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return this.queue.isEmpty();
+    }
+
+    public Queue<Message> getQueue() {
+        return this.queue;
     }
 }

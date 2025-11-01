@@ -16,28 +16,34 @@ public class DeliveryQueue {
         while (maxSize == queue.size()) {
             Thread.yield();
         }
-        queue.add(message);
-        System.out.println("[" + thread.getName() + "]: Produced: " + message + ":" + queue);
+        synchronized (this) {            
+            queue.add(message);
+            System.out.println("[" + thread.getName() + "]: Produced: " + message + ":" + queue);
 
-        // If END message, send copy to each server thread to end
-        if (message.getType() == Type.END_PROGRAM) {
-            for (int i = 0; i < numServers-1; i++) {
-                queue.add(message);
+            if (message.getType() == Type.END_PROGRAM) {
+                for (int i = 0; i < numServers - 1; i++) {
+                    queue.add(message);
+                }
             }
+            
+            sharedSignal.modIsEmpty(false);
         }
-        
-        sharedSignal.modIsEmpty(false);
     }
 
     public Message consume(Thread thread) {
-        synchronized (this) {
-            while (sharedSignal.getIsEmpty()) {}
-            Message message = queue.remove();
-            if (queue.isEmpty()) {
-                sharedSignal.modIsEmpty(true);
-            }
-            System.out.println("[" + thread.getName() + "]: Consumed: " + message + ":" + queue);
-            return message;
+        while (sharedSignal.getIsEmpty()) {
         }
+        
+        Message message = null;
+        synchronized (this) {
+            if (!queue.isEmpty()) { 
+                message = queue.remove();
+                if (queue.isEmpty()) {
+                    sharedSignal.modIsEmpty(true);
+                }
+                System.out.println("[" + thread.getName() + "]: Consumed: " + message + ":" + queue);
+            }
+        }
+        return message;
     }
 }

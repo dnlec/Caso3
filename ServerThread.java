@@ -12,6 +12,9 @@ public class ServerThread extends Thread {
     public void run() {
         while (true) {
             Message message = deliveryQueue.consume(this);
+            if (message == null) {
+                continue; 
+            }
             if (message.getType() == Type.END_PROGRAM) {
                 break;
             }
